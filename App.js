@@ -4,6 +4,8 @@ import * as Permissions from 'expo-permissions';
 
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
+const businessId = "hardcoded business id"
+
 export default class App extends React.Component {
   state = {
     scanned: false
@@ -56,7 +58,10 @@ export default class App extends React.Component {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: this.state.scannedData
+      body: JSON.stringify({
+        clientId: JSON.parse(this.state.scannedData).clientId,
+        businessId: businessId
+      })
     });
   }
 
@@ -67,7 +72,10 @@ export default class App extends React.Component {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: this.state.scannedData
+      body: JSON.stringify({
+        clientId: JSON.parse(this.state.scannedData).clientId,
+        businessId: businessId
+      })
     });
   }
 }
