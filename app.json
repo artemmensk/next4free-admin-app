@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "./AdminApp.js",
     "name": "admin-app",
     "slug": "admin-app",
     "privacy": "public",

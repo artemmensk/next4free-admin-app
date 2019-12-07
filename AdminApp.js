@@ -1,12 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import * as Permissions from 'expo-permissions';
+import { registerRootComponent } from 'expo';
 
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 const businessId = "hardcoded business id"
 
-export default class App extends React.Component {
+class AdminApp extends React.Component {
   state = {
     scanned: false
   }
@@ -101,3 +102,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   }
 });
+
+export default registerRootComponent(AdminApp);
