@@ -5,10 +5,12 @@ import { registerRootComponent } from 'expo';
 
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
-const businessId = "hardcoded business id"
+const backendUrl = 'http://192.168.43.92:8080'
+const businessId = 'hardcoded business id'
 
 class AdminApp extends React.Component {
   state = {
+    currentProcessLoaded: false,
     scanned: false
   }
   async componentDidMount() {
@@ -34,11 +36,12 @@ class AdminApp extends React.Component {
             />
           ) : (
               <View>
-                <Text>Scanned data:</Text>
-                <Text>{this.state.scannedData}</Text>
+                <Text>Current clientId:</Text>
+                <Text>{this.state.clientId}</Text>
               </View>
             )}
         </View>
+        {this.state.currentProcessLoaded && <Text>Current process: {this.currentAmmountOfStamps()} / {this.targetAmmountOfStamps()}</Text>}
         <View style={styles.footer}>
           <Button title={'Scan'} onPress={() => this.setState({ scanned: false })} />
           <Button title={'Stamp'} onPress={() => this.stamp()} />
@@ -49,36 +52,73 @@ class AdminApp extends React.Component {
   }
 
   handleBarCodeScanned = ({ data }) => {
-    this.setState({ scanned: true, scannedData: data });
+    var clientId = JSON.parse(data).clientId
+    this.setState({ scanned: true, clientId: clientId });
+    this.fetchCurrentProcess(clientId)
   };
 
-  stamp = () => {
-    fetch('http://192.168.43.92:8080/process/stamp', {
+  async stamp() {
+    await fetch(backendUrl + '/process/stamp', {
       method: 'PUT',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        clientId: JSON.parse(this.state.scannedData).clientId,
+        clientId: this.state.clientId,
         businessId: businessId
       })
     });
+    this.fetchCurrentProcess(this.state.clientId)
   }
 
-  complete = () => {
-    fetch('http://192.168.43.92:8080/process/complete', {
+  async complete() {
+    await fetch(backendUrl + '/process/complete', {
       method: 'PUT',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        clientId: JSON.parse(this.state.scannedData).clientId,
+        clientId: this.state.clientId,
         businessId: businessId
       })
     });
+    this.fetchCurrentProcess(this.state.clientId)
   }
+
+  currentAmmountOfStamps() {
+    return this.state.currentProcessLoaded ? this.state.currentProcess.stamps.length : ''
+  }
+
+  targetAmmountOfStamps() {
+    return this.state.currentProcessLoaded ? this.state.currentProcess.processPolicy.targetAmount : ''
+  }
+
+  async fetchCurrentProcess(clientId) {
+    this.setState({
+      currentProcessLoaded: false
+    })
+
+    var response = await fetch(backendUrl + '/client/' + clientId + '/business/' + businessId + '/current-process', {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (response.status !== 200) {
+      return;
+    }
+
+    var currentProcess = await response.json();
+
+    this.setState({
+      currentProcessLoaded: true,
+      currentProcess: currentProcess
+    })
+  };
 }
 
 const styles = StyleSheet.create({
