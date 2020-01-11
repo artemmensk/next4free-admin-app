@@ -8,40 +8,25 @@ import { createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
 
 import { ClientStateScreen } from './screens/ClientStateScreen';
-
-class AdminApp extends React.Component {
-
-  async componentDidMount() {
-    this.getPermissionsAsync();
-  }
-
-  getPermissionsAsync = async () => {
-    const { status } = await Permissions.askAsync(Permissions.CAMERA);
-    this.setState({ hasCameraPermission: status === 'granted' });
-  };
-
-  render() {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <BarCodeScanner
-          onBarCodeScanned={this.handleBarCodeScanned}
-          style={StyleSheet.absoluteFillObject}
-        />
-      </View>
-    );
-  }
-
-  handleBarCodeScanned = ({ data }) => {
-    var clientId = JSON.parse(data).clientId;
-    this.props.navigation.navigate('ClientStateScreen', { 'clientId': clientId });
-  };
-}
+import { QRScannerScreen } from './screens/QRScannerScreen'
+import { SuccessStampScreen } from './screens/SuccessStampScreen'
+import { SuccessCompleteScreen } from './screens/SuccessCompleteScreen'
+import { ErrorScreen } from './screens/ErrorScreen'
 
 const AppNavigator = createStackNavigator({
-  Home: AdminApp,
-  ClientStateScreen: ClientStateScreen
+  QRScannerScreen: QRScannerScreen,
+  ClientStateScreen: ClientStateScreen,
+  SuccessStampScreen: SuccessStampScreen,
+  SuccessCompleteScreen: SuccessCompleteScreen,
+  ErrorScreen: ErrorScreen
 });
 
 const AppContainer = createAppContainer(AppNavigator);
 
-export default registerRootComponent(AppContainer);
+class AdminApp extends React.Component {
+  render() {
+    return <AppContainer />;
+  }
+}
+
+export default registerRootComponent(AdminApp);

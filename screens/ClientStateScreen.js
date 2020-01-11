@@ -6,49 +6,57 @@ const businessId = 'hardcoded business id'
 
 export class ClientStateScreen extends React.Component {
   state = {
-    currentProcessLoaded: false,
+    currentProcessFetched: false
   }
 
   async componentDidMount() {
     this.setState({
       clientId: this.props.navigation.state.params.clientId
-    }, () => this.fetchCurrentProcess(this.state.clientId))
+    }, () => this.focusListener = this.props.navigation.addListener('didFocus', () => { this.fetchCurrentProcess(this.state.clientId) }))
   }
 
   render() {
     return (
       <View style={{ flex: 1 }}>
-        <View style={styles.header}>
-          <Text>header</Text>
-        </View>
         <View style={styles.body}>
-          {this.state.currentProcessLoaded && <Text>Current process: {this.currentAmmountOfStamps()} / {this.targetAmmountOfStamps()}</Text>}
+          {this.state.currentProcessFetched
+            ? <Text style={styles.text}>{this.currentAmmountOfStamps()} / {this.targetAmmountOfStamps()}</Text>
+            : <Text></Text>}
         </View>
-        <View style={styles.footer}>
-          <Button title={'Stamp'} onPress={() => this.stamp()} />
-          <Button title={'Complete'} onPress={() => this.complete()} />
+        <View style={styles.buttonsView}>
+          <View style={styles.buttonView}>
+            <Button title={'Stamp'} color='black' onPress={() => this.stamp()} />
+          </View>
+          <View style={styles.buttonView}>
+            {this.completeIsPossible()
+              ? <Button title={'Complete'} color='black' onPress={() => this.complete()} />
+              : <Button title={'Complete'} color='black' disabled/>}
+          </View>
         </View>
-      </View>
+      </View >
     );
   }
 
   async stamp() {
-    await fetch(backendUrl + '/process/stamp', {
-      method: 'PUT',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        clientId: this.state.clientId,
-        businessId: businessId
-      })
-    });
-    this.fetchCurrentProcess(this.state.clientId)
+    var response = await fetch(backendUrl + '/process/stamp', this.request());
+    if (response.status === 200) {
+      this.props.navigation.navigate('SuccessStampScreen');
+      return;
+    }
+    this.props.navigation.navigate('ErrorScreen');
   }
 
   async complete() {
-    await fetch(backendUrl + '/process/complete', {
+    var response = await fetch(backendUrl + '/process/complete', this.request());
+    if (response.status === 200) {
+      this.props.navigation.navigate('SuccessCompleteScreen');
+      return;
+    }
+    this.props.navigation.navigate('ErrorScreen');
+  }
+
+  request() {
+    var request = {
       method: 'PUT',
       headers: {
         Accept: 'application/json',
@@ -58,22 +66,24 @@ export class ClientStateScreen extends React.Component {
         clientId: this.state.clientId,
         businessId: businessId
       })
-    });
-    this.fetchCurrentProcess(this.state.clientId)
+    };
+
+    return request;
+  }
+
+  completeIsPossible() {
+    return this.state.currentProcessFetched ? this.currentAmmountOfStamps() >= this.targetAmmountOfStamps() : false
   }
 
   currentAmmountOfStamps() {
-    return this.state.currentProcessLoaded ? this.state.currentProcess.stamps.length : ''
+    return this.state.currentProcess.stamps.length
   }
 
   targetAmmountOfStamps() {
-    return this.state.currentProcessLoaded ? this.state.currentProcess.processPolicy.targetAmount : ''
+    return this.state.currentProcess.processPolicy.targetAmount
   }
 
   async fetchCurrentProcess(clientId) {
-    this.setState({
-      currentProcessLoaded: false
-    })
 
     var response = await fetch(backendUrl + '/client/' + clientId + '/business/' + businessId + '/current-process', {
       method: 'GET',
@@ -84,36 +94,37 @@ export class ClientStateScreen extends React.Component {
     });
 
     if (response.status !== 200) {
+      this.setState({
+        currentProcessFetched: false
+      })
       return;
     }
 
     var currentProcess = await response.json();
 
     this.setState({
-      currentProcessLoaded: true,
+      currentProcessFetched: true,
       currentProcess: currentProcess
     })
   };
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'red'
-  },
   body: {
     flex: 5,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'green'
+    justifyContent: 'center'
   },
-  footer: {
+  text: {
+    fontSize: 64,
+  },
+  buttonsView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'blue',
-    flexDirection: 'row'
+    alignItems: 'center'
+  },
+  buttonView: {
+    flex: 1,
+    width: "80%",
+    margin: 10
   }
 });
