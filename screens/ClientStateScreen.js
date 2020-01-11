@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 
 const backendUrl = 'http://192.168.43.92:8080'
 const businessId = 'hardcoded business id'
+const defaultTargetAmmount = 3;
 
 export class ClientStateScreen extends React.Component {
   state = {
@@ -19,9 +20,7 @@ export class ClientStateScreen extends React.Component {
     return (
       <View style={{ flex: 1 }}>
         <View style={styles.body}>
-          {this.state.currentProcessFetched
-            ? <Text style={styles.text}>{this.currentAmmountOfStamps()} / {this.targetAmmountOfStamps()}</Text>
-            : <Text></Text>}
+          <Text style={styles.text}>{this.currentAmmountOfStamps()} / {this.targetAmmountOfStamps()}</Text>
         </View>
         <View style={styles.buttonsView}>
           <View style={styles.buttonView}>
@@ -30,7 +29,7 @@ export class ClientStateScreen extends React.Component {
           <View style={styles.buttonView}>
             {this.completeIsPossible()
               ? <Button title={'Complete'} color='black' onPress={() => this.complete()} />
-              : <Button title={'Complete'} color='black' disabled/>}
+              : <Button title={'Complete'} color='black' disabled />}
           </View>
         </View>
       </View >
@@ -76,11 +75,11 @@ export class ClientStateScreen extends React.Component {
   }
 
   currentAmmountOfStamps() {
-    return this.state.currentProcess.stamps.length
+    return this.state.currentProcessFetched ? this.state.currentProcess.stamps.length : 0
   }
 
   targetAmmountOfStamps() {
-    return this.state.currentProcess.processPolicy.targetAmount
+    return this.state.currentProcessFetched ? this.state.currentProcess.processPolicy.targetAmount : defaultTargetAmmount
   }
 
   async fetchCurrentProcess(clientId) {
@@ -95,7 +94,7 @@ export class ClientStateScreen extends React.Component {
 
     if (response.status !== 200) {
       this.setState({
-        currentProcessFetched: false
+        currentProcessFetched: false,
       })
       return;
     }
@@ -117,6 +116,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 64,
+    fontWeight: 'bold'
   },
   buttonsView: {
     flex: 1,
