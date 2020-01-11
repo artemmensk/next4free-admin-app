@@ -1,7 +1,4 @@
 import React from 'react';
-import * as Permissions from 'expo-permissions';
-import { View, StyleSheet } from 'react-native'
-import { BarCodeScanner } from 'expo-barcode-scanner';
 
 import { registerRootComponent } from 'expo';
 import { createAppContainer } from 'react-navigation';
